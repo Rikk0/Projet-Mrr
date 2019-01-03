@@ -53,7 +53,11 @@ summary(tab$Weight)
 Y= tab$Weight
 
 x=as.matrix(data.frame(tab2))
-
+n = dim(tab)[1]
+tabSim = tab[setdiff(1:n,0:floor(n/10)),] 
+tabTest = tab[0:floor(n/10),]
+tabSim2= tabSim[-5]
+Sim = as.matrix(data.frame(tabSim2))
 ##lasso
 
 modlasso = glmnet(x, tab$Weight, alpha=1, family="gaussian")
@@ -69,6 +73,13 @@ plot(cvModlasso)
 bestLambdaLasso = cvModlasso$lambda.min
 ##bestLambdaLasso
 ##[1] 0.8081123
+modlasso2 = glmnet(Sim, tabSim$Weight, alpha=1, family="gaussian")
+cvModlasso2= cv.glmnet(Sim,y= tabSim$Weight, alpha=1)
+bestLambdaLasso2 = cvModlasso2$lambda.min
+predictLass = predict(cvModlasso2, data.matrix(tabTest),s=c(bestLambdaLasso2),type="class")
+plasso = prediction(predlasso$posterior[,2],spam)
+perf4 = performance(p4,"tpr","fpr")
+plot(perf4, col = "green")
 
 ##############################Ridge
 modridge = glmnet(x, tab$Weight, alpha=0, family="gaussian")
@@ -101,5 +112,4 @@ summary(forwardModel)
 # Stepwise regression model
 backwardModel = stepAIC(lmModel, direction = "backward", trace = FALSE)
 summary(backwardModel)
-
 
