@@ -3,6 +3,7 @@ library(MASS)
 library(ROCR)
 library(corrplot)
 library(glmnet)
+library(hydroGOF)
 ###Extraction et Analyse des donnes
 
 tab = data.frame(read.table("FA.dat", sep = "", header = TRUE))
@@ -83,12 +84,8 @@ cvModlasso2= cv.glmnet(Sim,y= tabSim$Weight, alpha=1)
 bestLambdaLasso2 = cvModlasso2$lambda.min
 predictLass = predict(modlasso2, as.matrix(tabTest2),s=bestLambdaLasso2,type="class")
 rmse(as.numeric(tabTest$Weight),as.numeric(predictLass))
-
-
-plasso = prediction(as.numeric(predictLass),as.numeric(tabTest$Weight))
-perf4 = performance(plasso,"tpr","fpr")
-plot(perf4, col = "green")
-
+mean((tabTest$Weight-predictLass)^2)
+boxplot(predictLass)
 ##############################Ridge
 modridge = glmnet(x, tab$Weight, alpha=0, family="gaussian")
 plot(modridge, xvar="lambda")
@@ -108,7 +105,8 @@ cvModridge2= cv.glmnet(Sim,y= tabSim$Weight, alpha=0)
 bestLambdaRidge2 = cvModridge2$lambda.min
 predictRidge = predict(modridge2, as.matrix(tabTest2),s=bestLambdaRidge2,type="class")
 rmse(as.numeric(tabTest$Weight),as.numeric(predictRidge))
-
+boxplot(predictRidge)
+boxplot(predictLass, add = TRUE)
 ###################################Stepwise, forward, backward
 
 library(MASS)
@@ -122,7 +120,7 @@ summary(stepModel)
 forwardModel = stepAIC(lmModel, direction = "forward", trace = FALSE)
 summary(forwardModel)
 
-# Stepwise regression model
+# backward regression model
 backwardModel = stepAIC(lmModel, direction = "backward", trace = FALSE)
 summary(backwardModel)
 
