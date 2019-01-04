@@ -1,4 +1,8 @@
 rm(list=ls())
+library(MASS)
+library(ROCR)
+library(corrplot)
+library(glmnet)
 ###Extraction et Analyse des donnes
 
 tab = data.frame(read.table("FA.dat", sep = "", header = TRUE))
@@ -41,11 +45,11 @@ boxplot(tab)
 
 
 ###R?gression
-library(corrplot)
+
 corrplot(cor(tab))
 
 ###pr?paration
-library(glmnet)
+
 
 tab2= tab[-5]
 summary(tab$Weight)
@@ -54,8 +58,9 @@ Y= tab$Weight
 
 x=as.matrix(data.frame(tab2))
 n = dim(tab)[1]
-tabSim = tab[setdiff(1:n,0:floor(n/10)),] 
-tabTest = tab[0:floor(n/10),]
+tabSim = tab[setdiff(1:n,0:floor(n/5)),] 
+tabTest = tab[0:floor(n/5),]
+tabTest2 = tabTest[-5]
 tabSim2= tabSim[-5]
 Sim = as.matrix(data.frame(tabSim2))
 ##lasso
@@ -76,9 +81,12 @@ bestLambdaLasso = cvModlasso$lambda.min
 modlasso2 = glmnet(Sim, tabSim$Weight, alpha=1, family="gaussian")
 cvModlasso2= cv.glmnet(Sim,y= tabSim$Weight, alpha=1)
 bestLambdaLasso2 = cvModlasso2$lambda.min
-predictLass = predict(cvModlasso2, data.matrix(tabTest),s=c(bestLambdaLasso2),type="class")
-plasso = prediction(predlasso$posterior[,2],spam)
-perf4 = performance(p4,"tpr","fpr")
+predictLass = predict(modlasso2, as.matrix(tabTest2),s=bestLambdaLasso2,type="class")
+rmse(as.numeric(tabTest$Weight),as.numeric(predictLass))
+
+
+plasso = prediction(as.numeric(predictLass),as.numeric(tabTest$Weight))
+perf4 = performance(plasso,"tpr","fpr")
 plot(perf4, col = "green")
 
 ##############################Ridge
@@ -91,10 +99,15 @@ coef(modridge)[, 10]
 cvModridge= cv.glmnet(x,y= Y, alpha=0)
 plot(cvModridge)
 
-bestLambdaRidge = cvModlasso$lambda.min
+bestLambdaRidge = cvModridge$lambda.min
 ##bestLambdaRidge
 ##[1]0.8081123
 
+modridge2 = glmnet(Sim, tabSim$Weight, alpha=0, family="gaussian")
+cvModridge2= cv.glmnet(Sim,y= tabSim$Weight, alpha=0)
+bestLambdaRidge2 = cvModridge2$lambda.min
+predictRidge = predict(modridge2, as.matrix(tabTest2),s=bestLambdaRidge2,type="class")
+rmse(as.numeric(tabTest$Weight),as.numeric(predictRidge))
 
 ###################################Stepwise, forward, backward
 
