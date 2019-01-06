@@ -159,3 +159,7 @@ which(grepl(min(r),r))
 ```
 
 On observe que le k minimisant le RMSE se situe aux alentours de 100. Il faut donc prendre environ 100 voisins pour se rapprocher au mieux des valeurs réelles. Cependant, on obtient un  RMSE de 24 environ ce qui est une valeur très importante par rapport aux valeurs de la RMSE trouvés avec les autres modèles.
+
+## Conclusion
+
+Les modèles qui modélisent le mieux l'expression du poids sont Lasso et Elastic Net. En effet, ce sont ces modèles qui possèdent le RMSE le plus faible. Certaines variables semblent avoir moins d'impact sur le poids cependant, lorsqu'elles ne sont pas utilisées, cela n'améliore pas forcément la modélisation du poids par les modèles.
