@@ -126,19 +126,20 @@ perf3 = performance(p3,"tpr","fpr")
 plot(perf3, col = "red")
 ```
 
-## Conclusion
-
-Nous allons comparer toutes les courbes ROC:
+## KNN
+Nous allons utiliser une méthode d'apprentissage supervisé utilisé en machine learning. Celle-ci consiste à faire la moyenne des plus proches voisins d'une valeur à déterminer. Nous cherchons à minimiser la valeur du rmse et comparer cette valeur avec les autres modèles. On calcule donc les valeurs du rmse pour différentes valeurs de k afin de trouver le plus petit.
 
 ```{r echo = FALSE}
-plot(perf)
-plot(perf2, add = TRUE, col = "blue")
-plot(perf3, add = TRUE, col = "red")
-plot(perf4, add = TRUE, col = "green")
-plot(perf5, add = TRUE, col = "orange")
-plot(perf6, add = TRUE, col = "brown")
-plot(perf7, add = TRUE, col = "purple")
-legend(0.6,0.8,legend=c("CART","Bagging", "Random Forest", "LDA", "QAD", "Logistic Regression", "Bayes"), col=c("black","blue","red","green","orange","brown","purple"),lty=1, cex=0.8, ncol=1)
+r = vector(length=500)
+for(i in 1:500){
+  knnModel = knn(train = tabSim2, test = tabTest2, cl = tabSim$Weight, k = i)
+  m = tabSim$Weight-as.numeric(as.character(knnModel))
+  rmseknn = sqrt(mean(m^2))
+  r[i]=rmseknn
+}
+plot(r, xlab= "Valeur de k", ylab = "Valeur du RMSE", main = "Courbe du RMSE en fonction de k sans sélection de variables")
+min(r)
+which(grepl(min(r),r))
 ```
 
-Nous observons que la meilleure courbe est la courbe ROC de la machine Random Forest. Nous conseillons donc dans ce cas d'utiliser la méthode Random Forest afin de trier les spams de la boîte mail.
+On observe que le k minimisant le RMSE se situe aux alentours de 100. Il faut donc prendre environ 100 voisins pour se rapprocher au mieux des valeurs réelles. Cependant, on obtient un  RMSE de 24 environ ce qui est une valeur très importante par rapport aux valeurs de la RMSE trouvés avec les autres modèles.
