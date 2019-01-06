@@ -140,3 +140,31 @@ summary(forwardModel)
 backwardModel = stepAIC(lmModel, direction = "backward", trace = FALSE)
 summary(backwardModel)
 
+# KNN sans selection de variables
+library(class)
+r = vector(length=500)
+for(i in 1:500){
+  knnModel = knn(train = tabSim2, test = tabTest2, cl = tabSim$Weight, k = i)
+  m = tabSim$Weight-as.numeric(as.character(knnModel))
+  rmseknn = sqrt(mean(m^2))
+  r[i]=rmseknn
+}
+plot(r)
+min(r)
+which(grepl(min(r),r))
+#il nous faut 97 voisins pour avoir le rmse le plus petit rmse = 24.63602 
+
+# KNN avec Lasso
+tabKnnLasso = tabSim2[,c(7,8,9,11,13)]
+tabKnnLassoTest = tabTest2[,c(7,8,9,11,13)]
+r2 = vector(length=500)
+for(i in 1:500){
+  knnModelLasso = knn(train = tabKnnLasso, test = tabKnnLassoTest, cl = tabSim$Weight, k = i)
+  m = tabSim$Weight-as.numeric(as.character(knnModelLasso))
+  rmseknnlasso = sqrt(mean(m^2))
+  r2[i]=rmseknnlasso
+}
+plot(r2)
+min(r2)
+which(grepl(min(r2),r2))
+#rmse = 24.28422 k = 114

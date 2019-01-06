@@ -1,6 +1,6 @@
 ###Extraction et Analyse des données
 rm(list=ls());
-tab = data.frame(read.table("/home/hanna_benj/Documents/semestre5/MRR/Projet-Mrr/FA.dat", sep = "", header = TRUE))
+tab = data.frame(read.table("/home/bouchaud/Documents/MRR/Projet-Mrr/FA.dat", sep = "", header = TRUE))
 #suppression des données eronnées apprise grâce aux notes spéciales du jeu de donnée
 tab = tab[-c(48, 76, 96,182),]
 #modification d'une donnée par rapport aux notes spéciales du jeu de donnée
@@ -76,4 +76,13 @@ boxplot(tab2)
 
 ###Régression
 library(corrplot)
-corrplot(cor(tab))
+corrplot(cor(tab),tl.cex = 0.5)
+plot(x = tab$Weight, y = tab$Percent_body_fat_Brozek_equation)
+plot(x = tab$Weight, y = tab$Percent_body_fat_using_Siri_equation)
+plot(x = tab$Weight, y = tab$Density) # corrélé linéairement mais négativement
+plot(x = tab$Weight, y = tab$Height)
+plot(x = tab$Weight, y = tab$Adiposity_index)
+plot(x = tab$Weight, y = tab$Fat_Free_Weight)
+plot(x = tab$Weight, y = tab$Neck_circumference)
+plot(x = tab$Weight, y = tab$Age) # pas corrélé
+# toutes les variables sont corrélées linéairement à la variable weight à part la variable age
