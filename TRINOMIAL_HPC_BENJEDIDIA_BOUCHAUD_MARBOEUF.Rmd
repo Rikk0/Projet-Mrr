@@ -85,7 +85,7 @@ Le adjusted R-squared de ces méthode est  \({R^2}_{adj} = 0.9931\). Le adjusted
 
 ## Ridge
 
-
+Nous allons effectuer une regression l2 pénalisée avec Ridge. Nous choisissons le \(\lambda\) par cross validation.
 
 ```{r echo = FALSE, warning= FALSE}
 modridge2 = glmnet(Sim, tabSim$Weight, alpha=0, family="gaussian")
@@ -96,40 +96,56 @@ rmse(as.numeric(tabTest$Weight),as.numeric(predictRidge))
 rmseRidge = sqrt(mean((tabTest$Weight-predictRidge)^2))
 ```
 
-## CART
+Nous avons un RMSE de 3.330613.
+
+## Lasso
+
+Nous allons effectuer une regression l1 pénalisée avec Lasso. Nous choisissons le \(\lambda\) par cross validation.
 
 ```{r echo = FALSE}
-modtree=tree(spam~.,data=tabSim)
-pred = predict(modtree,newdata = tabTest)
-p = prediction(pred[,2],spam)
-perf = performance(p,"tpr","fpr")
-plot(perf)
+modlasso2 = glmnet(Sim, tabSim$Weight, alpha=1, family="gaussian")
+cvModlasso2= cv.glmnet(Sim,y= tabSim$Weight, alpha=1)
+bestLambdaLasso2 = cvModlasso2$lambda.min
+predictLass = predict(modlasso2, as.matrix(tabTest2),s=bestLambdaLasso2,type="class")
+rmseLasso = sqrt(mean((tabTest$Weight-predictLass)^2))
 ```
+Nous avons un RMSE de 2.344981. Le RMSE de la méthode Lasso est plus petit que celui de la méthode Ridge. Lasso modélise mieux nos données que Ridge. 
 
-## Bagging
+## Elastic Net
+
+Elastic Net est une méthode de régression régularisé qui combine Lasso et Ridge. Nous choississons le \(\alpha\)qui minimise le RMSE.
 
 ```{r echo = FALSE}
-modbag = bagging(spam~.,data=tabSim,coob=TRUE)
-pred3 = predict(modbag,newdata = tabTest, type ="prob")
-p2 = prediction(pred3[,2],spam)
-perf2 = performance(p2,"tpr","fpr")
-plot(perf2, col = "blue")
+matRMSE = vector(length = 9)
+for (i in 1:9){
+  al = i/10
+ modEN = glmnet(Sim, tabSim$Weight, alpha=al, family="gaussian")
+  cvModEN= cv.glmnet(Sim,y= tabSim$Weight, alpha=al)
+  bestLambdaEN = cvModEN$lambda.min
+  predictEN = predict(modEN, as.matrix(tabTest2),s=bestLambdaEN,type="class")
+  rmseEN = sqrt(mean((tabTest$Weight-predictEN)^2))
+  matRMSE[i] = rmseEN
+}
+m = which(grepl(min(matRMSE), matRMSE))
+for (i in 1:9){
+  al = i/100
+  al = al + (m/10)
+  modEN = glmnet(Sim, tabSim$Weight, alpha=al, family="gaussian")
+  cvModEN= cv.glmnet(Sim,y= tabSim$Weight, alpha=al)
+  bestLambdaEN = cvModEN$lambda.min
+  predictEN = predict(modEN, as.matrix(tabTest2),s=bestLambdaEN,type="class")
+  rmseEN = sqrt(mean((tabTest$Weight-predictEN)^2))
+  matRMSE[i] = rmseEN
+}
+almin = (m/10) + (which(grepl(min(matRMSE), matRMSE))/100)
+min(matRMSE)
 ```
-
-## Random Forest
-
-```{r echo = FALSE}
-modFor2 = randomForest(spam~.,data=tabSim)
-pred4 = predict(modFor2,newdata = tabTest, type ="prob")
-p3 = prediction(pred4[,2],spam)
-perf3 = performance(p3,"tpr","fpr")
-plot(perf3, col = "red")
-```
+Nous avons un RMSE de 2.344349. Le RMSE de la méthode Elastic Net est assez semblable à celui de Lasso. Cette méthode permet aussi d'avoir une modélisation correcte.
 
 ## KNN
 Nous allons utiliser une méthode d'apprentissage supervisé utilisé en machine learning. Celle-ci consiste à faire la moyenne des plus proches voisins d'une valeur à déterminer. Nous cherchons à minimiser la valeur du rmse et comparer cette valeur avec les autres modèles. On calcule donc les valeurs du rmse pour différentes valeurs de k afin de trouver le plus petit.
 
-```{r echo = FALSE}
+```{r echo = FALSE, warning= FALSE}
 r = vector(length=500)
 for(i in 1:500){
   knnModel = knn(train = tabSim2, test = tabTest2, cl = tabSim$Weight, k = i)
