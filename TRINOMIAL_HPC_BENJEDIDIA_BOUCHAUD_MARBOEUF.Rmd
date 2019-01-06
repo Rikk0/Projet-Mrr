@@ -1,0 +1,124 @@
+---
+title: "Projet de MRR"
+author: "Elena BOUCHAUD, Hanna BEN JEDIDIA et Aymeric MARBOEUF"
+date: "7 janvier 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Nous disposons d'un jeu de données comprenant des informations sur le poids et des paramètres susceptibles d'aider à déterminer le poinds d'une personnes tel que la taille, le tour des hanches... À l'aide de ce jeu de données, nous souhaitons trouver un modèle qui détermine le poids d'une personne en fonction des différentes variables.
+
+À l'origine, ce jeu de données est composé de 252 observations et de 19 variables: ID de la personnes, le pourcentage de graisse corporelle selon l'équation de Brozek, le pourcentage de graisse corporelle selon l'équation de Siri, la densité, l'age, le poids, la taille, l'indice d'adiposité, le poids sans gras, la circonférence du cou, la circonférence de la poitrine, la circonférence de l'abdomaine, la circonférence des hanche, la circonférence des cuisses, la circonférence des genou, la circonférence des chevilles, la circonférence du biceps, la circonférence de l'avant bras et la circonférence du poignée.
+
+```{r echo = FALSE, message = FALSE}
+library(MASS)
+library(corrplot)
+library(glmnet)
+library(hydroGOF)
+library(class)
+
+tab = data.frame(read.table("FA.dat", sep = "", header = TRUE))
+```
+
+## Analyse est nétoyage des données
+
+The data are as received from Dr. Fisher.  Note, however, that there
+are a few errors.  The body densities for cases 48, 76, and 96, for
+instance, each seem to have one digit in error as can be seen from the
+two body fat percentage values.  Also note the presence of a man (case
+42) over 200 pounds in weight who is less than 3 feet tall (the height
+should presumably be 69.5 inches, not 29.5 inches)!  The percent body
+fat estimates are truncated to zero when negative (case 182).
+
+La première colonne, l'ID de la personne, ne donne pas d'information sur le poids elle est présente à titre indicatif. Il est donc préférable de supprimer cette colonne pour avoir une bonne modelisation.
+Les cas 48, 76 et 96 ont des erreurs les données de pourcentage de gras. Nous allons donc supprimer ces lignes pour ne pas corrompre nos données. Le cas 182 a un pourcentage de gras négatif se qui n'est pas possible, nous supprimons cette ligne également. D'après l'analyse des données la taille du cas 42 
+
+```{r echo = FALSE}
+modbayes = naive_bayes(spam~.,data=tabSim)
+pred8 = predict(modbayes,newdata = tabTest, type ="prob")
+p7 = prediction(pred8[,2],spam)
+perf7 = performance(p7,"tpr","fpr")
+plot(perf7, col = "purple")
+```
+
+## ADL
+
+```{r echo = FALSE}
+modLDA = lda(spam~.,data=tabSim)
+pred5 = predict(modLDA,newdata = tabTest, method="predictive")
+p4 = prediction(pred5$posterior[,2],spam)
+perf4 = performance(p4,"tpr","fpr")
+plot(perf4, col = "green")
+```
+
+## QDL
+
+```{r echo = FALSE}
+modQDA = qda(spam~.,data=tabSim)
+pred6 = predict(modQDA,newdata = tabTest, method="predictive")
+p5 = prediction(pred6$posterior[,2],spam)
+perf5 = performance(p5,"tpr","fpr")
+plot(perf5, col = "orange")
+```
+
+## Logistic Regression
+
+```{r echo = FALSE, warning= FALSE}
+modlogreg = glm(spam~.,data=tabSim, family = "binomial")
+pred7 = predict(modlogreg,newdata = tabTest, method="predictive")
+p6 = prediction(pred7,spam)
+perf6 = performance(p6,"tpr","fpr")
+plot(perf6, col = "brown")
+```
+
+## CART
+
+```{r echo = FALSE}
+modtree=tree(spam~.,data=tabSim)
+pred = predict(modtree,newdata = tabTest)
+p = prediction(pred[,2],spam)
+perf = performance(p,"tpr","fpr")
+plot(perf)
+```
+
+## Bagging
+
+```{r echo = FALSE}
+modbag = bagging(spam~.,data=tabSim,coob=TRUE)
+pred3 = predict(modbag,newdata = tabTest, type ="prob")
+p2 = prediction(pred3[,2],spam)
+perf2 = performance(p2,"tpr","fpr")
+plot(perf2, col = "blue")
+```
+
+## Random Forest
+
+```{r echo = FALSE}
+modFor2 = randomForest(spam~.,data=tabSim)
+pred4 = predict(modFor2,newdata = tabTest, type ="prob")
+p3 = prediction(pred4[,2],spam)
+perf3 = performance(p3,"tpr","fpr")
+plot(perf3, col = "red")
+```
+
+## Conclusion
+
+Nous allons comparer toutes les courbes ROC:
+
+```{r echo = FALSE}
+plot(perf)
+plot(perf2, add = TRUE, col = "blue")
+plot(perf3, add = TRUE, col = "red")
+plot(perf4, add = TRUE, col = "green")
+plot(perf5, add = TRUE, col = "orange")
+plot(perf6, add = TRUE, col = "brown")
+plot(perf7, add = TRUE, col = "purple")
+legend(0.6,0.8,legend=c("CART","Bagging", "Random Forest", "LDA", "QAD", "Logistic Regression", "Bayes"), col=c("black","blue","red","green","orange","brown","purple"),lty=1, cex=0.8, ncol=1)
+```
+
+Nous observons que la meilleure courbe est la courbe ROC de la machine Random Forest. Nous conseillons donc dans ce cas d'utiliser la méthode Random Forest afin de trier les spams de la boîte mail.
