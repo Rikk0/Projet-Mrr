@@ -57,7 +57,7 @@ Nous allons donc travailler avec un jeu de données contenant 243 observations e
 ## Corrélations entre les données
 
 ```{r echo = FALSE}
-corrplot(cor(tab))
+corrplot(cor(tab),tl.cex=0.5)
 ```
 Nous observons que les variables sont fortement corélées entre elles. Or il n'est pas préférable d'utiliser une régression linéaire. Nous allons donc effectuer une régression par pénalisation.
 
