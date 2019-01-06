@@ -11,37 +11,28 @@ tab = data.frame(read.table("FA.dat", sep = "", header = TRUE))
 tab = tab[-c(48, 76, 96,182),-1]
 #modification d'une donnée par rapport aux notes spéciales du jeu de donnée
 tab$Height[42] = 69.5
-
-#Repérage de valeurs abérantes à enlever
 boxplot(tab)
+#Repérage de valeurs abérantes à enlever
 #pour la colonne Weight nous avons deux valeurs abérante à enlever
 m = which(grepl(max(tab$Weight),tab$Weight))
 tab = tab[-c(m),]
 m = which(grepl(max(tab$Weight),tab$Weight))
 tab = tab[-c(m),]
-# pour la colonne Percent_body_fat_Brozek_equation nous avons 1 valeur abérrante
-m = which(grepl(max(tab$Percent_body_fat_Brozek_equation),tab$Percent_body_fat_Brozek_equation))
-tab = tab[-c(m),]
-#cette valeur était aussi une valeur abérante pour Percent_body_fat_using_Siri_equation, Density, Adiposity_index, Abdomen_circumference
-#pour Adiposity_index
-m = which(grepl(max(tab$Adiposity_index),tab$Adiposity_index))
-tab = tab[-c(m),]
-boxplot(tab)
+#### Poids extrême (obésité)
+
 #pour Fat free Weight
 m = which(grepl(max(tab$Fat_Free_Weight),tab$Fat_Free_Weight))
 tab = tab[-c(m),]
-m = which(grepl(max(tab$Fat_Free_Weight),tab$Fat_Free_Weight))
-tab = tab[-c(m),]
-m = which(grepl(max(tab$Fat_Free_Weight),tab$Fat_Free_Weight))
-tab = tab[-c(m),]
-# pour Neck_circumference
-m = which(grepl(min(tab$Neck_circumference),tab$Neck_circumference))
-tab = tab[-c(m),]
-m = which(grepl(min(tab$Neck_circumference),tab$Neck_circumference))
-tab = tab[-c(m),]
+###108 kg sans ras
+
 # pour Chest_circumference
 m = which(grepl(max(tab$Chest_circumference),tab$Chest_circumference))
 tab = tab[-c(m),]
+
+m = which(grepl(max(tab$Chest_circumference),tab$Chest_circumference))
+tab = tab[-c(m),]
+#### plus que du 110 F
+
 boxplot(tab)
 
 
@@ -83,8 +74,8 @@ modlasso2 = glmnet(Sim, tabSim$Weight, alpha=1, family="gaussian")
 cvModlasso2= cv.glmnet(Sim,y= tabSim$Weight, alpha=1)
 bestLambdaLasso2 = cvModlasso2$lambda.min
 predictLass = predict(modlasso2, as.matrix(tabTest2),s=bestLambdaLasso2,type="class")
-rmse(as.numeric(tabTest$Weight),as.numeric(predictLass))
-mean((tabTest$Weight-predictLass)^2)
+#rmse(as.numeric(tabTest$Weight),as.numeric(predictLass))
+rmseLasso = sqrt(mean((tabTest$Weight-predictLass)^2))
 boxplot(predictLass)
 ##############################Ridge
 modridge = glmnet(x, tab$Weight, alpha=0, family="gaussian")
@@ -105,8 +96,33 @@ cvModridge2= cv.glmnet(Sim,y= tabSim$Weight, alpha=0)
 bestLambdaRidge2 = cvModridge2$lambda.min
 predictRidge = predict(modridge2, as.matrix(tabTest2),s=bestLambdaRidge2,type="class")
 rmse(as.numeric(tabTest$Weight),as.numeric(predictRidge))
+rmseRidge = sqrt(mean((tabTest$Weight-predictRidge)^2))
 boxplot(predictRidge)
-boxplot(predictLass, add = TRUE)
+boxplot(predictLass, add = TRUE, border="red")
+
+#Elastic Net
+matRMSE = vector(length = 9)
+for (i in 1:9){
+  al = i/10
+ modEN = glmnet(Sim, tabSim$Weight, alpha=al, family="gaussian")
+  cvModEN= cv.glmnet(Sim,y= tabSim$Weight, alpha=al)
+  bestLambdaEN = cvModEN$lambda.min
+  predictEN = predict(modEN, as.matrix(tabTest2),s=bestLambdaEN,type="class")
+  rmseEN = sqrt(mean((tabTest$Weight-predictEN)^2))
+  matRMSE[i] = rmseEN
+}
+m = which(grepl(min(matRMSE), matRMSE))
+for (i in 1:9){
+  al = i/100
+  al = al + (m/10)
+  modEN = glmnet(Sim, tabSim$Weight, alpha=al, family="gaussian")
+  cvModEN= cv.glmnet(Sim,y= tabSim$Weight, alpha=al)
+  bestLambdaEN = cvModEN$lambda.min
+  predictEN = predict(modEN, as.matrix(tabTest2),s=bestLambdaEN,type="class")
+  rmseEN = sqrt(mean((tabTest$Weight-predictEN)^2))
+  matRMSE[i] = rmseEN
+}
+almin = (m/10) + (which(grepl(min(matRMSE), matRMSE))/100)
 ###################################Stepwise, forward, backward
 
 library(MASS)
