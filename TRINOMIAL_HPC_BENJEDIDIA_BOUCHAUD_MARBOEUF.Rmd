@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-Nous disposons d'un jeu de données comprenant des informations sur le poids et des paramètres susceptibles d'aider à déterminer le poinds d'une personnes tel que la taille, le tour des hanches... À l'aide de ce jeu de données, nous souhaitons trouver un modèle qui détermine le poids d'une personne en fonction des différentes variables.
+Nous disposons d'un jeu de données comprenant des informations sur le poids et des paramètres susceptibles d'aider à déterminer le poids d'une personne tels que la taille, le tour des hanches... À l'aide de ce jeu de données, nous souhaitons trouver un modèle qui détermine le poids d'une personne en fonction des différentes variables.
 
-À l'origine, ce jeu de données est composé de 252 observations et de 19 variables: ID de la personnes, le pourcentage de graisse corporelle selon l'équation de Brozek, le pourcentage de graisse corporelle selon l'équation de Siri, la densité, l'age, le poids, la taille, l'indice d'adiposité, le poids sans gras, la circonférence du cou, la circonférence de la poitrine, la circonférence de l'abdomaine, la circonférence des hanche, la circonférence des cuisses, la circonférence des genou, la circonférence des chevilles, la circonférence du biceps, la circonférence de l'avant bras et la circonférence du poignée.
+À l'origine, ce jeu de données est composé de 252 observations et de 19 variables: ID de la personne, le pourcentage de graisse corporelle selon l'équation de Brozek, le pourcentage de graisse corporelle selon l'équation de Siri, la densité, l'âge, le poids, la taille, l'indice d'adiposité, le poids sans gras, la circonférence du cou, la circonférence de la poitrine, la circonférence de l'abdomen, la circonférence des hanches, la circonférence des cuisses, la circonférence des genoux, la circonférence des chevilles, la circonférence du biceps, la circonférence de l'avant bras et la circonférence du poignet.
 
 ```{r echo = FALSE, message = FALSE}
 library(MASS)
@@ -26,17 +26,17 @@ tab = data.frame(read.table("FA.dat", sep = "", header = TRUE))
 boxplot(tab)
 ```
 
-## Analyse est nétoyage des données
+## Analyse et nettoyage des données
 
-La première colonne, l'ID de la personne, ne donne pas d'information sur le poids elle est présente à titre indicatif. Il est donc préférable de supprimer cette colonne pour avoir une bonne modelisation.
-Les cas 48, 76 et 96 ont des erreurs les données de pourcentage de gras. Nous allons donc supprimer ces lignes pour ne pas corrompre nos données. Le cas 182 a un pourcentage de gras négatif se qui n'est pas possible, nous supprimons cette ligne également. D'après l'analyse des données la taille du cas 42 est éronné mais peut être corrigée.
+La première colonne, l'ID de la personne, ne donne pas d'informations sur le poids elle est présente à titre indicatif. Il est donc préférable de supprimer cette colonne pour avoir une bonne modélisation.
+Les cas 48, 76 et 96 ont des erreurs dans les données de pourcentage de gras. Nous allons donc supprimer ces lignes pour ne pas corrompre nos données. Le cas 182 a un pourcentage de gras négatif ce qui n'est pas possible, nous supprimons cette ligne également. D'après l'analyse des données la taille du cas 42 est éronnée mais peut être corrigée.
 
 ```{r echo = FALSE}
 tab = tab[-c(48, 76, 96,182),-1]
 tab$Height[42] = 69.5
 ```
 
-En analysant un peu plus les données, nous remarquons qu'il y a deux valeurs parmi le poids qui semblent abérante ou qui apratiennent à des cas de grandes obésités et qui peut corrompre nos modèles. Une valeur aussi parmi le poids sans gras semble abérante (108kg) ainsi que deux autres parmi la circonférence de la poitrine. Les lignes contenant ces valeurs seront aussi enlevées.
+En analysant un peu plus les données, nous remarquons qu'il y a deux valeurs parmi celles du poids qui semblent aberrantes ou qui apartiennent à des cas de grandes obésités et qui peut corrompre nos modèles. Une valeur aussi parmi celle du poids sans gras semble aberrante (108kg) ainsi que deux autres parmi la circonférence de la poitrine. Les lignes contenant ces valeurs seront aussi enlevées.
 
 ```{r echo = FALSE}
 m = which(grepl(max(tab$Weight),tab$Weight))
@@ -59,7 +59,7 @@ Nous allons donc travailler avec un jeu de données contenant 243 observations e
 ```{r echo = FALSE}
 corrplot(cor(tab))
 ```
-Nous observons que les variables sont fortement corélées entre elles. Or il n'est pas possible d'utiliser d'effectuer une régression linéaire. Nous allons donc effectuer une régression par pénalisation.
+Nous observons que les variables sont fortement corélées entre elles. Or il n'est pas préférable d'utiliser une régression linéaire. Nous allons donc effectuer une régression par pénalisation.
 
 ```{r echo = FALSE}
 n = dim(tab)[1]
@@ -81,11 +81,11 @@ forwardModel = stepAIC(lmModel, direction = "forward", trace = FALSE)
 backwardModel = stepAIC(lmModel, direction = "backward", trace = FALSE)
 ```
 
-Le adjusted R-squared de ces méthode est  \({R^2}_{adj} = 0.9931\). Le adjusted R-squared est proche de 1, donc ces méthodes sont efficaces pour la sélection de variables.
+Le adjusted R-squared de ces méthodes est  \({R^2}_{adj} = 0.9931\). Le adjusted R-squared est proche de 1, donc ces méthodes sont efficaces pour la sélection de variables.
 
 ## Ridge
 
-Nous allons effectuer une regression l2 pénalisée avec Ridge. Nous choisissons le \(\lambda\) par cross validation.
+Nous allons effectuer une régression l2 pénalisée avec Ridge. Nous choisissons le \(\lambda\) par cross validation.
 
 ```{r echo = FALSE, warning= FALSE}
 modridge2 = glmnet(Sim, tabSim$Weight, alpha=0, family="gaussian")
@@ -100,7 +100,7 @@ Nous avons un RMSE de 3.330613.
 
 ## Lasso
 
-Nous allons effectuer une regression l1 pénalisée avec Lasso. Nous choisissons le \(\lambda\) par cross validation.
+Nous allons effectuer une régression l1 pénalisée avec Lasso. Nous choisissons le \(\lambda\) par cross validation.
 
 ```{r echo = FALSE}
 modlasso2 = glmnet(Sim, tabSim$Weight, alpha=1, family="gaussian")
@@ -113,7 +113,7 @@ Nous avons un RMSE de 2.344981. Le RMSE de la méthode Lasso est plus petit que 
 
 ## Elastic Net
 
-Elastic Net est une méthode de régression régularisé qui combine Lasso et Ridge. Nous choississons le \(\alpha\)qui minimise le RMSE.
+Elastic Net est une méthode de régression régularisé qui combine Lasso et Ridge. Nous choississons le \(\alpha\) qui minimise le RMSE.
 
 ```{r echo = FALSE}
 matRMSE = vector(length = 9)
